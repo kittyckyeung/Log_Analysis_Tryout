@@ -1,0 +1,73 @@
+# ============================================================
+# Agentic Log Analysis Configuration
+# ============================================================
+
+splunk:
+  host: "https://your-splunk-host:8089"     # Splunk management port
+  username: "admin"
+  password: "your-splunk-password"
+  # Alternative: use a token instead of user/pass
+  token: ""                                  # Bearer token (leave blank to use user/pass)
+  search_query: "search index=main | head 100"
+  earliest_time: "-15m"                      # How far back to look each poll cycle
+  latest_time: "now"
+  poll_interval_seconds: 60                  # How often to poll Splunk for new logs
+  verify_ssl: false                          # Set true in production with valid certs
+
+llm:
+  provider: "minimax"
+  api_key: "your-minimax-api-key"
+  group_id: "your-minimax-group-id"          # MiniMax requires a group_id
+  model: "abab6.5s-chat"                     # MiniMax model name
+  base_url: "https://api.minimax.chat/v1"
+  max_tokens: 2048
+  temperature: 0.2                           # Lower = more deterministic analysis
+  # How many similar past cases to inject as context
+  similar_cases_limit: 3
+
+knowledge_base:
+  db_path: "knowledge_base.db"              # SQLite database file path
+  # Minimum similarity score (0-1) to consider a case as "similar"
+  similarity_threshold: 0.30
+
+alerts:
+  # Severity levels that trigger an alert: DEBUG < INFO < WARNING < ERROR < CRITICAL
+  trigger_on_levels: ["ERROR", "CRITICAL", "FATAL"]
+  # Also alert on these keyword patterns anywhere in the log (case-insensitive)
+  suspicious_keywords:
+    - "unauthorized"
+    - "authentication failed"
+    - "permission denied"
+    - "sql injection"
+    - "brute force"
+    - "out of memory"
+    - "disk full"
+    - "connection refused"
+    - "timeout"
+    - "stack overflow"
+    - "segmentation fault"
+    - "null pointer"
+
+  email:
+    enabled: true
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    use_tls: true
+    sender: "alerts@yourdomain.com"
+    password: "your-smtp-password"
+    recipients:
+      - "oncall@yourdomain.com"
+      - "devops@yourdomain.com"
+    subject_prefix: "[LOG-ALERT]"
+
+  webhook:
+    enabled: true
+    url: "https://hooks.yourservice.com/your-webhook-path"
+    # Additional headers (e.g., for authentication)
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer your-webhook-token"
+    timeout_seconds: 10
+    # Retry on failure
+    max_retries: 3
+    retry_delay_seconds: 5
